@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Franco Calendar Number8</title>
+
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <form>
+        <label for="calendarDate">Start Date: </label>
+        <input type="date" name="calendar-Date" id="calendarDate"><br><br>
+
+        <label for="calendarDays">Number of days: </label>
+        <input type="number" min="1" max="31" value="1" name="calendar-Days" id="calendarDays"><br><br>
+
+        <label for="calendarCountry">Country Code: </label>
+        <input type="text" maxlength="2" value="CR" name="calendar-Country" id="calendarCountry"><br><br>
+
+        <input type="submit" id="getCalendar" value="Go">
+    </form>
+    <hr>
+    <div id="calendarContainer">
+        <div id="outputMsg"></div>
+    </div>
+    <script src="./main.js"></script>
+</body>
+</html>
