@@ -49,7 +49,7 @@
         monthLength = (new Date(year, month, 0).getDate());
         console.log('monthLength ' + monthLength);
         
-        console.log('startDay + calendarDays.value = ' + (Number(startDay) + Number(calendarDays.value)));
+        console.log('startDay + calendarDays.value = ' + (Number(startDay) + Number(calendarDays.value) - 1));
 
         // compose calendar with valid/invalid days, holidays, weekends
         for (var dayNum = Number(startDay); dayNum <= (Number(startDay) + Number(calendarDays.value)) && dayNum <= 31 ; dayNum++) {
