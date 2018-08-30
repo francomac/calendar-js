@@ -19,15 +19,26 @@
     line-height: 40px;
 }
 
+form div {
+    margin: 12px 12px;
+}
+
 .validDay {
     background-color: #C5DE97;
 }
+
 .invalidDay {
     background-color: #CCCCCD;
 }
+
 .weekend {
     background-color: #F7FF02;
 }
+
 .today {
     background-color: #FF7808;
+}
+
+.holiday {
+    background-color: #1eff00;
 }
