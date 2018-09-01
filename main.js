@@ -17,7 +17,7 @@
 
   document
     .querySelector("#getCalendar")
-    .addEventListener("click", function(event) {
+    .addEventListener("click", function (event) {
       event.preventDefault();
       getCalendar();
     });
@@ -25,9 +25,6 @@
   // draw all days in calendar
   function getCalendar() {
     let month = calendarDate.value.slice(5, 7); // get month selected in view
-    
-    //month -= 1; // zero-based
-    
     let year = calendarDate.value.slice(0, 4); // get year selected in view
     let startDay = calendarDate.value.slice(8, 10); // calendar start day
     let country = calendarCountry.value; // get country typed in view
@@ -40,6 +37,8 @@
     console.log("year : " + year);
     console.log("country : " + country);
 
+    holidayDates = getHolidays(month, year, country);
+
     // clean up old calendar to draw a new one.
     while (calendar.firstChild) {
       calendar.removeChild(calendar.firstChild);
@@ -51,25 +50,23 @@
     // zero-based
     // get number days in an specific month
     console.log(month);
-    monthLength = new Date(year, (month), 0).getDate();
+    monthLength = new Date(year, month, 0).getDate();
     console.log("monthLength " + monthLength);
 
     console.log(
       "startDay + calendarDays.value = " +
-        (Number(startDay) + Number(calendarDays.value) - 1)
+      (Number(startDay) + Number(calendarDays.value) - 1)
     );
 
     // compose calendar with valid/invalid days, holidays, weekends
     for (
-      let dayNum = Number(startDay);
-      dayNum <= Number(startDay) + Number(calendarDays.value) && dayNum <= 31;
-      dayNum++
+      let dayNum = Number(startDay); dayNum <= Number(startDay) + Number(calendarDays.value) && dayNum <= 31; dayNum++
     ) {
       // day index in week (0-6)
       dayIndx = dayIndxInWeek(month, year, dayNum);
 
-      // insert FIRST invalid days in calendar
-      (function(dayIndx) {
+      // insert FIRST INVALID days in calendar
+      (function (dayIndx) {
         if (!drawed) {
           // invalid days total is equal to dayIndx
           for (let index = 0; index < dayIndx; index++) {
@@ -85,44 +82,40 @@
 
       dayContainer = document.createElement("span");
 
-      // is not sunday and not saturday
+      // is NOT sunday and not saturday? VALID day
       if (dayIndx !== 0 && dayIndx !== 6) {
         dayContainer.className = "dayContainer validDay";
       }
 
-      // is sunday or saturday
+      // is sunday or saturday? WEEKEND day
       if (dayIndx == 0 || dayIndx == 6) {
         dayContainer.className = "dayContainer weekend";
       }
 
-      // is this day today
+      // is this day today?
       if (isToday(dayNum)) {
         dayContainer.className = "dayContainer today";
       }
 
-    //   holidayDates = getHolidays(month, year, country);
+      if (holidayDates != undefined && holidayDates.includes(dayNum)) {
+        dayContainer.className = "dayContainer holiday";
+      }
 
-    //   if (holidayDates != undefined && holidayDates.includes(dayNum)) {
-    //     dayContainer.className = "dayContainer holiday";
-    //   }
+      // insert VALID days in calendar 
+      if (dayNum <= monthLength) {
+        dayData = document.createTextNode(dayNum);
+        dayContainer.appendChild(dayData);
+        calendar.appendChild(dayContainer);
+      }
 
-      // insert day in calendar
-      dayData = document.createTextNode(dayNum);
-      dayContainer.appendChild(dayData);
-      calendar.appendChild(dayContainer);
-
-      // insert LAST invalid days in calendar
-      (function(monthLength) {
-        for (let index = monthLength; index < 32; index++) {
-          if (dayNum > monthLength) {
-            dayContainer = document.createElement("span");
-            dayContainer.className = "dayContainer invalidDay";
-            dayData = document.createTextNode("");
-            dayContainer.appendChild(dayData);
-            calendar.appendChild(dayContainer);
-          }
-        }
-      })(monthLength);
+      // insert LAST INVALID days in calendar
+      if (dayNum > monthLength) {
+        dayContainer = document.createElement("span");
+        dayContainer.className = "dayContainer invalidDay";
+        dayData = document.createTextNode("");
+        dayContainer.appendChild(dayData);
+        calendar.appendChild(dayContainer);
+      }
     }
   }
 
@@ -131,7 +124,7 @@
     // Month zero-based
     // Sunday - Saturday : 0 - 1
     // Expected output: 0, 1, 2, 3, 4, 5, 6
-    let dayRef = new Date(Date.UTC(year, (Number(month)-1), day, 0, 0, 0));
+    let dayRef = new Date(Date.UTC(year, Number(month) - 1, day, 0, 0, 0));
 
     dayRef = dayRef.toUTCString().slice(0, 3);
     switch (dayRef) {
@@ -304,46 +297,166 @@
   }
 
   // get holidays according to inputs: month, year, country
+
+  
+
   function getHolidays(month, year, country) {
-    let url = `https://holidayapi.com/holidayapi.com/v1/holidays?key=527663a9-2932-4246-b950-bdaad94c94af&country=${country}&year=${year}&month=${month}`;
 
-    console.log("getMonth : " + (Number(new Date().getMonth()) + 1));
-    console.log("month : " + month);
+    let getCorsRequest = makeCorsRequest(month, year, country);
+    getCorsRequest.then(
+      (response) => {
+        console.log(response);
+        let holidays = response["holidays"];
+        console.log(holidays);
+        if (holidays != undefined) {
+          let holidaysDate = holidays.map(function (holiday) {
+            return holiday.date;
+          });
+          holidaysDate.forEach(date => {
+            console.log(date.slice(8, 10));
+          });
+          return holidaysDate;
+        }
+        return false;
+      }, (err) => {
+        throw Error(response.statusText);
+      });
 
-    month += 1; // month must be one-based
+    // if (!myJson.ok) {
+    //   throw Error(myJson.statusText);
+    // }
+    // let holidays = myJson["holidays"];
+    // console.log(holidays);
+    // if (holidays != undefined) {
+    //   let holidaysDate = holidays.map(function (holiday) {
+    //     return holiday.date;
+    //   });
+    //   holidaysDate.forEach(date => {
+    //     console.log(date.slice(8, 10));
+    //   });
+    //   return holidaysDate;
+    // }
+    // return false;
 
-    console.log("month++ : " + month);
 
-    if (month < Number(new Date().getMonth()) + 1) {
-      fetch(url, {
-        credentials: 'include',
-        mode: 'cors',
-        'Content-Type': 'application/json'
-      })
-        .then(function(myJson) {
-          if (!myJson.ok) {
-            throw Error(myJson.statusText);
-          }
-          console.log(myJson);
-          let holidays = myJson["holidays"];
-          console.log(holidays);
-          if (holidays != undefined) {
-            let holidaysDate = holidays.map(function(holiday) {
-              return holiday.date;
-            });
-            holidaysDate.forEach(date => {
-              console.log(date.slice(8, 10));
-            });
-            return holidaysDate;
-          }
-          return false;
-        })
-        .catch(() =>
-          console.log("Can’t access " + url + " response. Blocked by browser?")
-        );
-    } else {
-      document.querySelector("#outputMsg").innerHTML +=
-        "<code>Sorry!&nbsp; Holiday Api free accounts are limited to historical data. A premium account access is required to current and upcoming holiday data.<br> Franco :)</code>";
-    }
+
+
+
+    // let url = `https://holidayapi.com/v1/holidays?key=527663a9-2932-4246-b950-bdaad94c94af&country=${country}&year=${year}&month=${month}`;
+
+    // console.log("getMonth : " + (Number(new Date().getMonth()) + 1));
+    // console.log("month : " + month);
+
+    // if (month < Number(new Date().getMonth()) + 1) {
+    //   fetch(url, {
+    //       credentials: 'omit'
+    //     })
+    //     .then(function (myJson) {
+    //       if (!myJson.ok) {
+    //         throw Error(myJson.statusText);
+    //       }
+    //       console.log(myJson);
+    //       let holidays = myJson["holidays"];
+    //       console.log(holidays);
+    //       if (holidays != undefined) {
+    //         let holidaysDate = holidays.map(function (holiday) {
+    //           return holiday.date;
+    //         });
+    //         holidaysDate.forEach(date => {
+    //           console.log(date.slice(8, 10));
+    //         });
+    //         return holidaysDate;
+    //       }
+    //       return false;
+    //     })
+    //     .catch(() =>
+    //       console.log("Can’t access " + url + " response. Blocked by browser?")
+    //     );
+    // } else {
+    //   document.querySelector("#outputMsg").innerHTML +=
+    //     "<code>Sorry!&nbsp; Holiday Api free accounts are limited to historical data. A premium account access is required to current and upcoming holiday data.<br> Franco :)</code>";
+    // }
   }
+
+
+
+
+
+
+
+  // Create the XHR object.
+  function createCORSRequest(method, url) {
+    var xhr = new XMLHttpRequest();
+    if ("withCredentials" in xhr) {
+      // XHR for Chrome/Firefox/Opera/Safari.
+      xhr.open(method, url, true);
+    } else if (typeof XDomainRequest != "undefined") {
+      // XDomainRequest for IE.
+      xhr = new XDomainRequest();
+      xhr.open(method, url);
+    } else {
+      // CORS not supported.
+      xhr = null;
+    }
+    return xhr;
+  }
+
+  // Make the actual CORS request.
+  function makeCorsRequest(month, year, country) {
+
+    // // This is a sample server that supports CORS.
+    // var url = 'https://holidayapi.com/v1/holidays?key=527663a9-2932-4246-b950-bdaad94c94af&country=CR&year=2017&month=08';
+
+    // var xhr = createCORSRequest('GET', url);
+
+    // if (!xhr) {
+    //   alert('CORS not supported');
+    //   return;
+    // }
+
+    // // Response handlers.
+    // xhr.onload = function () {
+    //   var text = xhr.responseText;
+    //   console.log('Response from CORS request to ' + url + ': ' + text);
+    //   return xhr.responseText;
+    // };
+
+    // xhr.onerror = function () {
+    //   console.log('Woops, there was an error making the request to https://www.holidayapi.com .');
+    // };
+
+    // xhr.send();
+
+
+
+
+    return new Promise((resolve, reject) => {
+
+      // This is a sample server that supports CORS.
+    var url = `https://holidayapi.com/v1/holidays?key=527663a9-2932-4246-b950-bdaad94c94af&country=${country}&year=${year}&month=${month}`;
+
+    var xhr = createCORSRequest('GET', url);
+    
+      if (xhr) {
+        // Response handlers.
+        xhr.onload = function () {
+          var text = xhr.responseText;
+          console.log('Response from CORS request to ' + url + ': ' + text);
+          resolve(xhr.responseText);
+        };
+        xhr.onerror = function () {
+          console.log('Woops, there was an error making the request to https://www.holidayapi.com .');
+          reject('Woops, there was an error making the request to https://www.holidayapi.com .');
+        };
+        xhr.send();
+      } else {
+        reject('Woops, there was an error making the request to https://www.holidayapi.com .');
+      }
+      
+    });
+
+
+  }
+
+
 })();
