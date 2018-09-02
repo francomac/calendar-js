@@ -31,6 +31,11 @@
       startDay = calendarDate.value.slice(8, 10); // calendar start day
       country = calendarCountry.value; // get country typed in view
       calendarHolidayDates = getHolidays(month, year, country);
+      // clean up old calendar to draw a new one.
+      while (calendar.firstChild) {
+        calendar.removeChild(calendar.firstChild);
+      }
+      calendarContainer.appendChild(calendar);
     });
 
   // adding event click for 'Go' Button
@@ -51,28 +56,15 @@
     let drawed = false; // are invalid days drawed?
     let dayIndx = ""; // day index in week (0 -6)
 
-    // clean up old calendar to draw a new one.
-    while (calendar.firstChild) {
-      calendar.removeChild(calendar.firstChild);
-    }
-    calendarContainer.appendChild(calendar);
-
     drawWeekHeader();
 
     // zero-based
     // get number days in an specific month
-    console.log(month);
     monthLength = new Date(year, month, 0).getDate();
-    console.log("monthLength " + monthLength);
-
-    console.log(
-      "startDay + calendarDays.value = " +
-      (Number(startDay) + Number(calendarDays.value) - 1)
-    );
 
     // compose calendar with valid/invalid days, holidays, weekends
     for (
-      let dayNum = Number(startDay); dayNum <= Number(startDay) + Number(calendarDays.value) && dayNum <= 31; dayNum++
+      let dayNum = Number(startDay); dayNum < Number(startDay) + Number(calendarDays.value) && dayNum <= 31; dayNum++
     ) {
       // day index in week (0-6)
       dayIndx = dayIndxInWeek(month, year, dayNum);
@@ -112,8 +104,7 @@
       if (calendarHolidayDates != undefined) {
         // calendarHolidayDates.includes(dayNum)) ;
         calendarHolidayDates.forEach(date => {
-          console.log(date.slice(8, 10));
-          if(dayNum == date.slice(8, 10)) {
+          if (dayNum == date.slice(8, 10)) {
             dayContainer.className = "dayContainer holiday";
           }
         });
@@ -329,10 +320,9 @@
             let holidaysDate = holidays.map(function (holiday) {
               return holiday.date;
             });
-            holidaysDate.forEach(date => {
-              console.log(date.slice(8, 10));
-            });
-            console.log(holidaysDate);
+            // holidaysDate.forEach(date => {
+            //   console.log(date.slice(8, 10));
+            // });
             calendarHolidayDates = holidaysDate;
             return holidaysDate;
           }
@@ -343,7 +333,7 @@
     } else {
       document.querySelector("#outputMsg").innerHTML = "";
       document.querySelector("#outputMsg").innerHTML =
-        "<code>Holidays will not be highlighted for your selected date, buy you can still get your calendar. Sorry!&nbsp; Holiday Api is limited to historical data for free accounts. A premium account access is required to current and upcoming holiday data. <br> Franco MaC :)</code>";
+        "<code>Holidays will not be highlighted for your selected date, you can still get your calendar. Sorry!&nbsp; Holiday Api is limited to historical data for free accounts. A premium account access is required to current and upcoming holiday data. <br> Franco MaC :)</code>";
     }
 
   }
