@@ -24,44 +24,46 @@
   // adding event onChagne for 'Calendar' input
   document
     .querySelector("#calendarDate")
-    .addEventListener("change", function (event) {
+    .addEventListener("change", function(event) {
       event.preventDefault();
-      month = calendarDate.value.slice(5, 7); // get month selected in view
-      year = calendarDate.value.slice(0, 4); // get year selected in view
-      startDay = calendarDate.value.slice(8, 10); // calendar start day
-      country = calendarCountry.value; // get country typed in view
+      getBasicData();
       calendarHolidayDates = getHolidays(month, year, country);
-      // clean up old calendar to draw a new one.
-      while (calendar.firstChild) {
-        calendar.removeChild(calendar.firstChild);
-      }
-      calendarContainer.appendChild(calendar);
+      cleanCalendar();
     });
 
   // adding event click for 'Go' Button
   document
     .querySelector("#getCalendar")
-    .addEventListener("click", function (event) {
+    .addEventListener("click", function(event) {
       event.preventDefault();
       getCalendar();
     });
 
-  // draw all days in calendar
-  function getCalendar() {
+  // get basic data from inputs
+  function getBasicData() {
     month = calendarDate.value.slice(5, 7); // get month selected in view
     year = calendarDate.value.slice(0, 4); // get year selected in view
     startDay = calendarDate.value.slice(8, 10); // calendar start day
     country = calendarCountry.value; // get country typed in view
+  }
 
-    let drawed = false; // are invalid days drawed?
-    let dayIndx = ""; // day index in week (0 -6)
-
-    // clean up old calendar to draw a new one.
+  //clean old calendar prepering to render new one.
+  function cleanCalendar() {
     while (calendar.firstChild) {
       calendar.removeChild(calendar.firstChild);
     }
     calendarContainer.appendChild(calendar);
-    
+  }
+
+  // draw all days in calendar
+  function getCalendar() {
+    getBasicData();
+
+    let drawed = false; // are invalid days drawed?
+    let dayIndx = ""; // day index in week (0 -6)
+
+    cleanCalendar();
+
     drawWeekHeader();
 
     // zero-based
@@ -70,13 +72,15 @@
 
     // compose calendar with valid/invalid days, holidays, weekends
     for (
-      let dayNum = Number(startDay); dayNum < Number(startDay) + Number(calendarDays.value) && dayNum <= 31; dayNum++
+      let dayNum = Number(startDay);
+      dayNum < Number(startDay) + Number(calendarDays.value) && dayNum <= 31;
+      dayNum++
     ) {
       // day index in week (0-6)
       dayIndx = dayIndxInWeek(month, year, dayNum);
 
       // insert FIRST INVALID days in calendar
-      (function (dayIndx) {
+      (function(dayIndx) {
         if (!drawed) {
           // invalid days total is equal to dayIndx
           for (let index = 0; index < dayIndx; index++) {
@@ -116,7 +120,7 @@
         });
       }
 
-      // insert VALID days in calendar 
+      // insert VALID days in calendar
       if (dayNum <= monthLength) {
         dayData = document.createTextNode(dayNum);
         dayContainer.appendChild(dayData);
@@ -263,6 +267,13 @@
     let selectList = document.createElement("select");
     selectList.setAttribute("id", "calendarCountry");
 
+    // adding event onChagne for 'Calendar' input
+    selectList.addEventListener("change", function(event) {
+      getBasicData();
+      calendarHolidayDates = getHolidays(month, year, country);
+      cleanCalendar();
+    });
+
     countrySelectContainer.appendChild(selectList);
 
     //Create and append the options
@@ -315,33 +326,36 @@
   // get holidays according to inputs: month, year, country
   function getHolidays(month, year, country) {
 
-    if (month < Number(new Date().getMonth()) + 1) {
-      document.querySelector("#outputMsg").innerHTML = "";
-      let getCorsRequest = makeCorsRequest(month, year, country);
-
-      getCorsRequest.then(
-        (response) => {
-          let holidays = JSON.parse(response).holidays;
-          if (holidays != undefined) {
-            let holidaysDate = holidays.map(function (holiday) {
-              return holiday.date;
-            });
-            // holidaysDate.forEach(date => {
-            //   console.log(date.slice(8, 10));
-            // });
-            calendarHolidayDates = holidaysDate;
-            return holidaysDate;
+    if (month != "" && year != "" && country != "") {
+      if (month < Number(new Date().getMonth()) + 1) {
+        document.querySelector("#outputMsg").innerHTML = "";
+        let getCorsRequest = makeCorsRequest(month, year, country);
+  
+        getCorsRequest.then(
+          response => {
+            let holidays = JSON.parse(response).holidays;
+            if (holidays != undefined) {
+              let holidaysDate = holidays.map(function(holiday) {
+                return holiday.date;
+              });
+              // holidaysDate.forEach(date => {
+              //   console.log(date.slice(8, 10));
+              // });
+              calendarHolidayDates = holidaysDate;
+              return holidaysDate;
+            }
+            return false;
+          },
+          err => {
+            throw Error(response.statusText);
           }
-          return false;
-        }, (err) => {
-          throw Error(response.statusText);
-        });
-    } else {
-      document.querySelector("#outputMsg").innerHTML = "";
-      document.querySelector("#outputMsg").innerHTML =
-        "<code>Holidays will not be highlighted for your selected date, you can still get your calendar. Sorry!&nbsp; Holiday Api is limited to historical data for free accounts. A premium account access is required to current and upcoming holiday data. <br> Franco MaC :)</code>";
+        );
+      } else {
+        document.querySelector("#outputMsg").innerHTML = "";
+        document.querySelector("#outputMsg").innerHTML =
+          "<code>Holidays will not be highlighted for your selected date, you can still get your calendar. Sorry!&nbsp; Holiday Api is limited to historical data for free accounts. A premium account access is required to current and upcoming holiday data. <br> Franco MaC :)</code>";
+      }
     }
-
   }
 
   // Create the XHR object.
@@ -363,32 +377,31 @@
 
   // Make the actual CORS request.
   function makeCorsRequest(month, year, country) {
-
     return new Promise((resolve, reject) => {
-
       var url = `https://holidayapi.com/v1/holidays?key=527663a9-2932-4246-b950-bdaad94c94af&country=${country}&year=${year}&month=${month}`;
 
-      var xhr = createCORSRequest('GET', url);
+      var xhr = createCORSRequest("GET", url);
 
       if (xhr) {
         // Response handlers.
-        xhr.onload = function () {
+        xhr.onload = function() {
           var text = xhr.responseText;
           resolve(xhr.responseText);
         };
-        xhr.onerror = function () {
-          console.log('Woops, there was an error making the request to https://www.holidayapi.com .');
-          reject('Woops, there was an error making the request to https://www.holidayapi.com .');
+        xhr.onerror = function() {
+          console.log(
+            "Woops, there was an error making the request to https://www.holidayapi.com ."
+          );
+          reject(
+            "Woops, there was an error making the request to https://www.holidayapi.com ."
+          );
         };
         xhr.send();
       } else {
-        reject('Woops, there was an error making the request to https://www.holidayapi.com .');
+        reject(
+          "Woops, there was an error making the request to https://www.holidayapi.com ."
+        );
       }
-
     });
-
-
   }
-
-
 })();
