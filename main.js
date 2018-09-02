@@ -56,6 +56,12 @@
     let drawed = false; // are invalid days drawed?
     let dayIndx = ""; // day index in week (0 -6)
 
+    // clean up old calendar to draw a new one.
+    while (calendar.firstChild) {
+      calendar.removeChild(calendar.firstChild);
+    }
+    calendarContainer.appendChild(calendar);
+    
     drawWeekHeader();
 
     // zero-based
